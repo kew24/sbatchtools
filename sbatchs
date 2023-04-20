@@ -186,6 +186,15 @@ echo \"---------- R SCRIPT COMMAND == R --vanilla < ${NAME}.R < ${RSCRIPT}\"
 R --vanilla < ${NAME}.R"
 }
 
+SCRIPT_END_ARRAY () {
+echo '
+#-------------------- JOB INFO --------------------
+echo -n "---------- SCONTROL == " ;  scontrol show jobid -dd ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}
+echo "---------- PATH == ${PATH}"
+echo -n "---------- END TIME == " ; date +"%Y_%m_%d %H:%M:%S"
+'
+}
+
 SCRIPT_END () {
 echo '
 #-------------------- JOB INFO --------------------
@@ -292,7 +301,7 @@ if [[ ( -f "${ARRAY}" && -s "${ARRAY}" ) ]]
 		exit 0
 	fi
 	#---------- Build JOB
-	SCRIPT_END >> ${NAME}.sh
+	SCRIPT_END_ARRAY >> ${NAME}.sh
 	chmod u+x ${NAME}.sh	
 else
 	CYAN "---------- DEFAULT ARRAY == NO ARRAY ----------"
