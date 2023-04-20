@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash 
 
 #---------- Set Default Values
 DEBUG=0
@@ -94,7 +94,8 @@ done
 
 #---------- Functions
 SCRIPT_START () {
-echo '#SBATCH --nodes=1
+echo '#!/usr/bin/env bash 
+#SBATCH --nodes=1
 #SBATCH --ntasks=1
 #BATCH --cpus-per-task='${CORES}'
 #SBATCH --time='${WALLTIME}':00:00

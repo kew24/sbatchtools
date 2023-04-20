@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash 
 
 #---------- Set Default Values
 DEBUG=0
