@@ -1,3 +1,5 @@
+<img align="right" src="sbatchtools.png" height="100px" width="100px">
+
 # sbatchtools
 
 sbatchtools is a suite of shell scripts to automate slurm submissions
