@@ -3,29 +3,28 @@
 #---------- Set Default Values
 DEBUG=0
 CORES=1
-QUEUE=shortq
+PARTITION=short
 WALLTIME=24
-UMASK=0022
 
 #---------- Colors
 RED() { echo "$(tput setaf 1)$*$(tput sgr0)"; }
-GREEN() { echo -n "$(tput setaf 2)$*$(tput sgr0)"; }
+GREEN() { echo "$(tput setaf 2)$*$(tput sgr0)"; }
 MAGENTA() { echo "$(tput setaf 5)$*$(tput sgr0)"; }
 CYAN() { echo "$(tput setaf 6)$*$(tput sgr0)"; }
 
 #---------- Usage
 usage()
 {
-	CYAN '------------------------------  QSUB SUBMITTER HELP ------------------------------ 
----------- PROGRAM		== qsubs (qsub submitter)
----------- VERSION		== 2.0.2
----------- DATE			== 2022_01_28
----------- CONTACT		== lee.marshall@vai.org
----------- DISCRIPTION		== automates creation and submition of PBS qsub scripts
----------- PATH			== export PATH=\$PATH:/path/to/qsubs/directory
+	CYAN '------------------------------  SBATCH SUBMITTER HELP ------------------------------ 
+---------- PROGRAM		== sbatchs (sbatch submitter)
+---------- VERSION		== 1.0.0
+---------- DATE			== 2023_04_20
+---------- CONTACT		== kew24 (template from lee.marshall@vai.org -- big thank you!)
+---------- DISCRIPTION		== automates creation and submition of slurm sbatch scripts
+---------- PATH			== export PATH=\$PATH:/path/to/sbatchs/directory
 
 -------------------- COMMANDS --------------------
----------- USAGE		== qsubs [options]* -s "command"
+---------- USAGE		== sbatchs [options]* -s "command"
 ---------- FLAGS
 	[ -d | --debug ]		== creates job script but does not execute
 	[ -h | --help ]			== help function
@@ -34,12 +33,11 @@ usage()
 						use SAMPLE as variable for sample name in command or script
 	[ -c | --cores <int> ]		== number of cores per job 1 to 80, default 1 core
 	[ -n | --name <name> ]		== name specific to job, default user name and date
-	[ -q | --queue <name> ]		== specify queue name, default any queue
+	[ -p | --partition <name> ]	== specify partition name, default any partition
 	[ -r | --rscript <"command"> or <file> ]	== command enclosed in double quotes or script file		
 	[ -s | --script <"command"> or <file> ]	== command enclosed in double quotes or script file
 	[ --script_args <args> ]	== positional arguments passed to your bash script file
-	[ -u | --umask <umask>]		== umask value, default 0022 (group read)
-	[ -w | --walltime <int> ]	== number of hours per job 1 to 744, default 24 hours
+	[ -w | --walltime <int> ]	== number of hours per job 1 to 336, default 24 hours
 
 -------------------- MULTIPLE COMMANDS --------------------
 ---------- USAGE		== containg multiple compands with double quotes, 
@@ -48,22 +46,22 @@ usage()
 
 -------------------- EXAMPLES --------------------
 touch sample_data.txt
-qsubs -n gzip_file -s "gzip sample_data.txt"
+sbatchs -n gzip_file -s "gzip sample_data.txt"
 
 touch sample1_data.txt
 touch sample2_data.txt
 echo sample1 > sample_names
 echo sample2 >> sample_names
-qsubs -n zip_comand -a sample_names -s "zip SAMPLE_data.zip SAMPLE_data.txt"
+sbatchs -n zip_comand -a sample_names -s "zip SAMPLE_data.zip SAMPLE_data.txt"
 
 echo "zip SAMPLE_data.zip SAMPLE_data.txt" > sample_script
-qsubs -n zip_script -a sample_names -s sample_script -d
-------------------------------  QSUB SUBMITTER HELP ---------------------------LLM'
+sbatchs -n zip_script -a sample_names -s sample_script -d
+------------------------------  SBATCH SUBMITTER HELP ---------------------------KEW24'
 	exit 2
 }
 
 #---------- Set Arguments
-PARSED_ARGUMENTS=$(getopt -a -n qsubs -o dha:c:n:q:r:s:u:w: --long debug,help,array:,cores:,name:,queue:,rscript:,script:,script_args:,umask:,walltime: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n sbatchs -o dha:c:n:p:r:s:w: --long debug,help,array:,cores:,name:,partition:,rscript:,script:,script_args:,walltime: -- "$@")
 
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
@@ -80,11 +78,10 @@ do
     -a | --array)      ARRAY="$2"      ; shift 2 ;;
     -c | --cores)      CORES="$2"      ; shift 2 ;;
     -n | --name)       NAME="$2"       ; shift 2 ;;
-    -q | --queue)      QUEUE="$2"      ; shift 2 ;;
+    -p | --partition)  PARTITION="$2"  ; shift 2 ;;
     -r | --rscript)    RSCRIPT="$2"    ; shift 2 ;;
     -s | --script)     SCRIPT="$2"     ; shift 2 ;;
     --script_args)     ARGS+=("$2")    ; shift 2 ;;
-	-u | --umask)      UMASK="$2"      ; shift 2 ;;
     -w | --walltime)   WALLTIME="$2"   ; shift 2 ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
@@ -97,72 +94,68 @@ done
 
 #---------- Functions
 SCRIPT_START () {
-echo '#PBS -l nodes=1:ppn='${CORES}'
-#PBS -l walltime='${WALLTIME}':00:00
-#PBS -N '${NAME}'
-#PBS -q '${QUEUE}'
-#PBS -d .
-#PBS -V
-#PBS -W umask='${UMASK}
+echo '#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#BATCH --cpus-per-task='${CORES}'
+#SBATCH --time='${WALLTIME}':00:00
+#SBATCH -J '${NAME}'
+#SBATCH -p '${PARTITION}'
+#SBATCH --chdir=.
+#SBATCH --export=ALL'
 }
 
 SCRIPT_START_ARRAY () {
-echo '#PBS -t 1-'${SAMPLE_NUMBER}''
+echo '#SBATCH --array 1-'${SAMPLE_NUMBER}''
 }
 
 SCRIPT_INFO () {
 echo '
-#-------------------- PBS VARIABLES --------------------
-#- #PBS -l nodes=1:ppn=1 == ppn=1 means using 1 core per job
-#- #PBS -l mem=5gb == 5gb of ram per 1 core (if ppn=4 change mem=24gb)
-#- #PBS -l waltime=24:00:00 == 24 hours max runtime
-#- #PBS -q shortq == choose queue shortq < 72hrs, lowprio or longq > 72hrs (qstat -q)
-#- #PBS -N Job_Name_Here == job name sepcific to your script
-#- #PBS -t 1-20 == 20 samples and 20 jobs to submit
-#- #PBS -j oe == job standard error and output files merged
-#- #PBS -M First_Name.LastName@vai.org == vai email
-#- #PBS -m abe == a = aborted email, b = start email, e = end email
-#- #PBS -d . == stay at directory when moving to a node
-#- #PBS -V == head node environment passed to job node environment
-#- #PBS -W umask=0022 == group and others have read permissions
+#-------------------- SBATCH VARIABLES --------------------
+#- #SBATCH --nodes=1 == 1 node
+#- #SBATCH --ntasks=1 == 1 task
+#- #SBATCH --cpus-per-task=1 == 1 cpu per task
+#- #SBATCH --time=24:00:00 == 24 hours max runtime
+#- #SBATCH --partition=short == choose partition short < 168hrs, long > 168hrs (sinfo)
+#- #SBATCH -J Job_Name_Here == job name sepcific to your script
+#- #SBATCH --array=1-20 == 20 samples and 20 jobs to submit
+#- #SBATCH --mail-user=First_Name.LastName@vai.org == vai email
+#- #SBATCH --mail-type=ALL == email at all events (NONE, BEGIN, END, FAIL, REQUEUE, ALL)
+#- #SBATCH --chdir=. == stay at directory when moving to a node
+#- #SBATCH --export=ALL == head node environment passed to job node environment
 
 #-------------------- JOB INFO --------------------
 echo -n "---------- START TIME == " ; date +"%Y_%m_%d %H:%M:%S"
 echo "---------- USER == ${USER}"
 echo "---------- HOSTNAME == ${HOSTNAME}"
-echo "---------- PBS_JOBNAME == ${PBS_JOBNAME}"
-echo "---------- PBS_JOBID == ${PBS_JOBID}"
-echo "---------- PBS_NUM_PPN == ${PBS_NUM_PPN}"
-echo "---------- PBS_O_QUEUE == ${PBS_O_QUEUE}"
-echo "---------- PBS_O_WORKDIR == ${PBS_O_WORKDIR}"
-echo "---------- PWD == ${PWD}"
+echo "---------- SLURM_JOB_NAME == ${SLURM_JOB_NAME}"
+echo "---------- SLURM_JOB_ID == ${SLURM_JOB_ID}"
+echo "---------- SLURM_JOB_CPUS_PER_NODE == ${SLURM_JOB_CPUS_PER_NODE}"
+echo "---------- SLURM_JOB_PARTITION == ${SLURM_JOB_PARTITION}"
+echo "---------- SLURM_SUBMIT_DIR == ${SLURM_SUBMIT_DIR}"
+echo "---------- PWD == ${PWD}
 
-#-------------------- QSUB COMMAND --------------------
-echo "---------- QSUB COMMAND == qsub '${NAME}'.sh"'
+#-------------------- SBATCH COMMAND --------------------
+echo "---------- SBATCH COMMAND == sbatch '${NAME}'.sh"
+'
 }
 
 SCRIPT_ARRAY () {
 echo '
-#-------------------- PBS ARRAY --------------------
-echo "---------- PBS_ARRAYID == ${PBS_ARRAYID}"
-PBS_ID=`head -n ${PBS_ARRAYID} '${ARRAY}' | tail -n1`
-echo "---------- PBS_ID == ${PBS_ID}"'
+#-------------------- SBATCH ARRAY --------------------
+echo "---------- SLURM_ARRAY_TASK_ID == ${SLURM_ARRAY_TASK_ID}"
+SBATCH_ID=`head -n ${SLURM_ARRAY_TASK_ID} '${ARRAY}' | tail -n1`
+echo "---------- SBATCH_ID == ${SBATCH_ID}"'
 }
 
 SCRIPT_FILE () {
 echo "
 #-------------------- SCRIPT FILE --------------------
 echo \"---------- SCRIPT FILE == ${SCRIPT}\"	
-echo \"---------- SAMPLE SCRIPT == bash ${NAME}_\${PBS_ID}.sh\"
-scp ${SCRIPT} ${NAME}_\${PBS_ID}.sh 
-chmod +x ${NAME}_\${PBS_ID}.sh
-sed -i 's/SAMPLE/'\${PBS_ID}'/g' ${NAME}_\${PBS_ID}.sh
-bash ${NAME}_\${PBS_ID}.sh $(echo \"${ARGS[@]}\" | sed 's/ /\" \"/')"
-# bash ${NAME}_\${PBS_ID}.sh ${'${ARGS[@]}'// /\" \"}"
-# bash ${NAME}_\${PBS_ID}.sh \"${ARGS[@]@Q}\""
-# bash ${NAME}_\${PBS_ID}.sh $(printf \"\'%s\' \" \"${ARGS[@]}\")"
-# bash ${NAME}_\${PBS_ID}.sh \"${ARGS[@]}\""
-# echo $(printf \" '%s' \" \"${ARGS[@]}\")
+echo \"---------- SAMPLE SCRIPT == bash ${NAME}_\${SBATCH_ID}.sh\"
+scp ${SCRIPT} ${NAME}_\${SBATCH_ID}.sh 
+chmod +x ${NAME}_\${SBATCH_ID}.sh
+sed -i 's/SAMPLE/'\${SBATCH_ID}'/g' ${NAME}_\${SBATCH_ID}.sh
+bash ${NAME}_\${SBATCH_ID}.sh $(echo \"${ARGS[@]}\" | sed 's/ /\" \"/')"
 }
 
 SCRIPT_COMMAND () {
@@ -176,11 +169,11 @@ RSCRIPT_FILE () {
 echo "
 #-------------------- R SCRIPT FILE --------------------
 echo \"---------- R SCRIPT FILE == ${RSCRIPT}\"	
-echo \"---------- R SAMPLE SCRIPT == R --vanilla < ${NAME}_\${PBS_ID}.R\"
-scp ${RSCRIPT} ${NAME}_\${PBS_ID}.R 
-chmod +x ${NAME}_\${PBS_ID}.R
-sed -i 's/SAMPLE/'\${PBS_ID}'/g' ${NAME}_\${PBS_ID}.R
-R --vanilla < ${NAME}_\${PBS_ID}.R"
+echo \"---------- R SAMPLE SCRIPT == R --vanilla < ${NAME}_\${SBATCH_ID}.R\"
+scp ${RSCRIPT} ${NAME}_\${SBATCH_ID}.R 
+chmod +x ${NAME}_\${SBATCH_ID}.R
+sed -i 's/SAMPLE/'\${SBATCH_ID}'/g' ${NAME}_\${SBATCH_ID}.R
+R --vanilla < ${NAME}_\${SBATCH_ID}.R"
 }
 
 RSCRIPT_COMMAND () {
@@ -190,18 +183,18 @@ echo \"---------- R SCRIPT COMMAND == R --vanilla < ${NAME}.R < ${RSCRIPT}\"
 R --vanilla < ${NAME}.R"
 }
 
-SCRIPT_END () {
+SCRIPT_END_SLURM () {
 echo '
 #-------------------- JOB INFO --------------------
-echo -n "---------- QSTAT == " ; qstat -f ${PBS_JOBID}
+echo -n "---------- SCONTROL == " ;  scontrol show jobid -dd ${SLURM_JOB_ID}
 echo "---------- PATH == ${PATH}"
 echo -n "---------- END TIME == " ; date +"%Y_%m_%d %H:%M:%S"
 '
 }
 
 #---------- Check Arguments
-CYAN "------------------------------ QSUB SUBMITTER ------------------------------
----------- QSUBS ARGUMENTS == $PARSED_ARGUMENTS"
+CYAN "------------------------------ SBATCH SUBMITTER ------------------------------
+---------- SBATCHS ARGUMENTS == $PARSED_ARGUMENTS"
 
 #---------- NAME
 if [ ${NAME} ]
@@ -212,27 +205,12 @@ else
 	CYAN "---------- DEFAULT JOBNAME == ${NAME} ----------"
 fi
 
-#---------- QUEUE 
-if [ ${QUEUE} = shortq ]
+#---------- PARTITION 
+if [ ${PARTITION} = short ]
 	then
-	CYAN "---------- DEFAULT QUEUE == ${QUEUE} ----------"
+	CYAN "---------- DEFAULT PARTITION == ${PARTITION} ----------"
 else
-	CYAN "---------- QUEUE == ${QUEUE} ----------"
-fi
-
-#---------- UMASK
-if [ ${UMASK} == "0022" ]
-	then
-	CYAN "---------- DEFAULT UMASK == ${UMASK} ----------"
-else
-	if [ ${UMASK} == "0002" ]
-	then
-		CYAN "---------- UMASK == ${UMASK} ----------"
-	else
-		RED "---------- UMASK == ${UMASK} ----------"
-		RED "---------- [[ERROR]] UMASK MUST BE 0022 or 0002 ----------"
-		exit 0
-	fi
+	CYAN "---------- PARTITION == ${PARTITION} ----------"
 fi
 
 #---------- CORES
@@ -255,12 +233,12 @@ if [ ${WALLTIME} == 24 ]
 	then
 	CYAN "---------- DEFAULT WALLTIME == ${WALLTIME} ----------"
 else
-	if [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 744 ]
+	if [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 336 ]
 		then
 		CYAN "---------- WALLTIME == ${WALLTIME} ----------"
 	else
 		RED "---------- WALLTIME == ${WALLTIME} ----------"
-		RED "----------[[ERROR]] WALLTIME HOURS NOT BETWEEN 1-744 ----------"
+		RED "----------[[ERROR]] WALLTIME HOURS NOT BETWEEN 1-336 ----------"
 		exit 0
 	fi
 fi
@@ -291,7 +269,7 @@ if [[ ( -f "${ARRAY}" && -s "${ARRAY}" ) ]]
 			CYAN "---------- SCRIPT FILE == ${SCRIPT} ----------"
 			SCRIPT_FILE >> ${NAME}.sh
 		else
-			SCRIPT=$(echo $SCRIPT | sed 's/SAMPLE/\${PBS_ID}/g')
+			SCRIPT=$(echo $SCRIPT | sed 's/SAMPLE/\${SBATCH_ID}/g')
 			CYAN "---------- SCRIPT COMMAND == ${SCRIPT} ----------"
 			SCRIPT_COMMAND >> ${NAME}.sh
 		fi
@@ -302,7 +280,7 @@ if [[ ( -f "${ARRAY}" && -s "${ARRAY}" ) ]]
 			CYAN "---------- R SCRIPT FILE == R --vanilla < ${RSCRIPT} ----------"
 			RSCRIPT_FILE >> ${NAME}.sh
 		else
-			echo ${RSCRIPT} | sed 's/SAMPLE/\${PBS_ID}/g' > ${NAME}.R 
+			echo ${RSCRIPT} | sed 's/SAMPLE/\${SBATCH_ID}/g' > ${NAME}.R 
 			CYAN "---------- R SCRIPT COMMAND == R --vanilla < ${NAME}.R < ${RSCRIPT} ----------"
 			RSCRIPT_COMMAND >> ${NAME}.sh
 		fi
@@ -349,19 +327,18 @@ else
 	chmod u+x ${NAME}.sh
 fi
 
-#---------- QSUB
+#---------- SBATCH
 if [[ ( -f "${NAME}.sh" && -x "${NAME}.sh" && -s "${NAME}.sh" ) ]]
 then
-	CYAN "---------- QSUB == qsub ${NAME}.sh ----------"
+	CYAN "---------- SBATCH == sbatch ${NAME}.sh ----------"
 	if [ ${DEBUG} == 1 ]
 		then 
 		MAGENTA "---------- DEBUG == file created, not submitted ----------"
 	else
-		GREEN "---------- Job ID == " ; qsub ${NAME}.sh
+		GREEN "---------- Job ID == " ; sbatch ${NAME}.sh
 	fi
 else
 	RED "---------- [[ERROR]] SHELL FILE NOT CREATED, EMPTY OR EXECUTABLE ----------"
 	exit 0
 fi
-CYAN "------------------------------ QSUB SUBMITTER ---------------------------LLM"
-
+CYAN "------------------------------ SBATCH SUBMITTER ---------------------------KEW24"
