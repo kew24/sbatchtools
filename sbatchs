@@ -101,6 +101,8 @@ echo '#!/usr/bin/env bash
 #SBATCH --time='${WALLTIME}':00:00
 #SBATCH -J '${NAME}'
 #SBATCH -p '${PARTITION}'
+#SBATCH --output=%x.o%j
+#SBATCH --error=%x.e%j
 #SBATCH --chdir=.
 #SBATCH --export=ALL'
 }
@@ -133,7 +135,7 @@ echo "---------- SLURM_JOB_ID == ${SLURM_JOB_ID}"
 echo "---------- SLURM_JOB_CPUS_PER_NODE == ${SLURM_JOB_CPUS_PER_NODE}"
 echo "---------- SLURM_JOB_PARTITION == ${SLURM_JOB_PARTITION}"
 echo "---------- SLURM_SUBMIT_DIR == ${SLURM_SUBMIT_DIR}"
-echo "---------- PWD == ${PWD}
+echo "---------- PWD == ${PWD}"
 
 #-------------------- SBATCH COMMAND --------------------
 echo "---------- SBATCH COMMAND == sbatch '${NAME}'.sh"
