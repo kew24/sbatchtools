@@ -3,7 +3,6 @@
 #---------- Set Default Values
 DEBUG=0
 CORES=1
-NODE=1
 NAME=bash
 PARTITION=short
 WALLTIME=24
@@ -32,19 +31,19 @@ usage()
 	[ -h | --help ]			== help function
 ---------- OPTIONS
 	[ -c | --cores <int> ]		== number of cores per job 1 to 80, default 1 core
-	[ -n | --node <node> ]		== name of specific node, default any node
 	[ -N | --name <name> ]		== name specific to job, default STDIN
 	[ -p | --partition <name> ]	== specify partition name, default any partition
 	[ -w | --walltime <int> ]	== number of hours per job 1 to 336, default 24 hours
 
 -------------------- EXAMPLES --------------------
+sruni
 sruni -c 4 -p short
 ------------------------------  SRUN INTERACTIVE HELP ---------------------------KEW24'
 	exit 2
 }
 
 #---------- Set Arguments
-PARSED_ARGUMENTS=$(getopt -a -n sruni -o dhc:n:N:p:w: --long debug,help,cores:,node:,name:,partition:,walltime: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n sruni -o dhc:N:p:w: --long debug,help,cores:,name:,partition:,walltime: -- "$@")
 
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
@@ -59,7 +58,6 @@ do
     -d | --debug)      DEBUG=1         ; shift   ;;
     -h | --help)       usage           ; shift   ;;
     -c | --cores)      CORES="$2"      ; shift 2 ;;
-    -n | --node)       NODE="$2"       ; shift 2 ;;
     -N | --name)       NAME="$2"       ; shift 2 ;;
     -p | --partition)  PARTITION="$2"  ; shift 2 ;;
     -w | --walltime)   WALLTIME="$2"   ; shift 2 ;;
@@ -106,14 +104,6 @@ else
 	fi
 fi
 
-#---------- NODE
-if [ ${NODE} == 1 ]
-	then
-	CYAN "---------- DEFAULT NODE == ${NODE} ----------"
-else
-	CYAN "---------- NODE == ${NODE} ----------"
-fi
-
 #---------- NAME
 if [ ${NAME} ]
 	then
@@ -135,9 +125,9 @@ fi
 #---------- SRUN
 if [ ${DEBUG} == 1 ]
 	then 
-	MAGENTA "---------- DEBUG == srun -w ${NODE} --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i"
+	MAGENTA "---------- DEBUG == srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i"
 	CYAN "------------------------------ SRUN INTERACTIVE ---------------------------KEW24"
 else
 	GREEN "---------- JOB == submitted ----------" 
-	srun -w ${NODE} --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i 
+	srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i 
 fi
