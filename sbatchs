@@ -183,7 +183,7 @@ echo \"---------- R SCRIPT COMMAND == R --vanilla < ${NAME}.R < ${RSCRIPT}\"
 R --vanilla < ${NAME}.R"
 }
 
-SCRIPT_END_SLURM () {
+SCRIPT_END () {
 echo '
 #-------------------- JOB INFO --------------------
 echo -n "---------- SCONTROL == " ;  scontrol show jobid -dd ${SLURM_JOB_ID}
