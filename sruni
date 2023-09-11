@@ -116,11 +116,10 @@ fi
 if [ ${PARTITION} = short ]
 	then
 	CYAN "---------- DEFAULT PARTITION == ${PARTITION} ----------"
-	CYAN "---------- PARTITION can be quick,short,long,big,bigmem,gpu"
 else
 	CYAN "---------- PARTITION == ${PARTITION} ----------"
-	CYAN "---------- PARTITION can be quick,short,long,big,bigmem,gpu"
 fi
+CYAN "---------- PARTITION can be quick,short,long,big,bigmem,gpu,bbc"
 
 #---------- SRUN
 if [ ${DEBUG} == 1 ]

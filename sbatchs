@@ -97,7 +97,7 @@ SCRIPT_START () {
 echo '#!/usr/bin/env bash 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#BATCH --cpus-per-task='${CORES}'
+#SBATCH --cpus-per-task='${CORES}'
 #SBATCH --time='${WALLTIME}':00:00
 #SBATCH -J '${NAME}'
 #SBATCH -p '${PARTITION}'
