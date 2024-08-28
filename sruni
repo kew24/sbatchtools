@@ -30,7 +30,7 @@ usage()
 	[ -d | --debug ]		== creates job script but does not execute
 	[ -h | --help ]			== help function
 ---------- OPTIONS
-	[ -c | --cores <int> ]		== number of cores per job 1 to 80, default 1 core
+	[ -c | --cores <int> ]		== number of cores per job 1 to 128, default 1 core
 	[ -N | --name <name> ]		== name specific to job, default STDIN
 	[ -p | --partition <name> ]	== specify partition name, default any partition
 	[ -w | --walltime <int> ]	== number of hours per job 1 to 336, default 24 hours
@@ -79,12 +79,12 @@ if [ ${CORES} == 1 ]
 	then	
 	CYAN "---------- DEFAULT CORES == ${CORES} ----------"
 else
-	if [ ${CORES} -gt 0 -a ${CORES} -le 80 ]
+	if [ ${CORES} -gt 0 -a ${CORES} -le 128 ]
 		then
 		CYAN "---------- CORES == ${CORES} ----------"
 	else
 		RED "---------- CORES == ${CORES} ----------"
-		RED "---------- [[ERROR]] CORES NOT GIVEN BETWEEN 1-80 ----------"
+		RED "---------- [[ERROR]] CORES NOT GIVEN BETWEEN 1-128 ----------"
 		exit 0
 	fi
 fi	
