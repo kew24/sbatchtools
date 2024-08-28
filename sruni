@@ -91,11 +91,16 @@ fi
 
 #---------- WALLTIME 
 if [ ${WALLTIME} == 24 ]
-	then
+then
+	WALLTIME=${WALLTIME}:00:00
 	CYAN "---------- DEFAULT WALLTIME == ${WALLTIME} ----------"
 else
-	if [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 336 ]
-		then
+	if [[ ${WALLTIME} =~ ^[0-9]+$ ]] && [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 336 ]
+	then
+		WALLTIME=${WALLTIME}:00:00
+		CYAN "---------- WALLTIME == ${WALLTIME} ----------"
+	elif [[ ${WALLTIME} == "UNLIMITED" ]]
+	then
 		CYAN "---------- WALLTIME == ${WALLTIME} ----------"
 	else
 		RED "---------- WALLTIME == ${WALLTIME} ----------"
@@ -124,9 +129,9 @@ CYAN "---------- PARTITION can be quick,short,long,big,bigmem,gpu,bbc"
 #---------- SRUN
 if [ ${DEBUG} == 1 ]
 	then 
-	MAGENTA "---------- DEBUG == srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i"
+	MAGENTA "---------- DEBUG == srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME} -J ${NAME} -p ${PARTITION} --pty bash -i"
 	CYAN "------------------------------ SRUN INTERACTIVE ---------------------------KEW24"
 else
 	GREEN "---------- JOB == submitted ----------" 
-	srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME}:00:00 -J ${NAME} -p ${PARTITION} --pty bash -i 
+	srun --ntasks-per-node=1 --cpus-per-task=${CORES} --time=${WALLTIME} -J ${NAME} -p ${PARTITION} --pty bash -i 
 fi

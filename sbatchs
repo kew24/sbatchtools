@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 
 #---------- Set Default Values
 DEBUG=0
@@ -94,11 +94,11 @@ done
 
 #---------- Functions
 SCRIPT_START () {
-echo '#!/usr/bin/env bash 
+	echo '#!/usr/bin/env bash 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task='${CORES}'
-#SBATCH --time='${WALLTIME}':00:00
+#SBATCH --time='${WALLTIME}'
 #SBATCH -J '${NAME}'
 #SBATCH -p '${PARTITION}'
 #SBATCH --output=%x.o%j
@@ -108,11 +108,11 @@ echo '#!/usr/bin/env bash
 }
 
 SCRIPT_START_ARRAY () {
-echo '#SBATCH --array 1-'${SAMPLE_NUMBER}''
+	echo '#SBATCH --array 1-'${SAMPLE_NUMBER}''
 }
 
 SCRIPT_INFO () {
-echo '
+	echo '
 #-------------------- SBATCH VARIABLES --------------------
 #- #SBATCH --nodes=1 == 1 node
 #- #SBATCH --ntasks=1 == 1 task
@@ -143,7 +143,7 @@ echo "---------- SBATCH COMMAND == sbatch '${NAME}'.sh"
 }
 
 SCRIPT_ARRAY () {
-echo '
+	echo '
 #-------------------- SBATCH ARRAY --------------------
 echo "---------- SLURM_ARRAY_TASK_ID == ${SLURM_ARRAY_TASK_ID}"
 SBATCH_ID=`head -n ${SLURM_ARRAY_TASK_ID} '${ARRAY}' | tail -n1`
@@ -151,7 +151,7 @@ echo "---------- SBATCH_ID == ${SBATCH_ID}"'
 }
 
 SCRIPT_FILE () {
-echo "
+	echo "
 #-------------------- SCRIPT FILE --------------------
 echo \"---------- SCRIPT FILE == ${SCRIPT}\"	
 echo \"---------- SAMPLE SCRIPT == bash ${NAME}_\${SBATCH_ID}.sh\"
@@ -162,14 +162,14 @@ bash ${NAME}_\${SBATCH_ID}.sh $(echo \"${ARGS[@]}\" | sed 's/ /\" \"/')"
 }
 
 SCRIPT_COMMAND () {
-echo '
+	echo '
 #-------------------- SCRIPT COMMAND --------------------
 echo "---------- SCRIPT COMMAND == '${SCRIPT}'"
 '${SCRIPT}''
 }
 
 RSCRIPT_FILE () {
-echo "
+	echo "
 #-------------------- R SCRIPT FILE --------------------
 echo \"---------- R SCRIPT FILE == ${RSCRIPT}\"	
 echo \"---------- R SAMPLE SCRIPT == R --vanilla < ${NAME}_\${SBATCH_ID}.R\"
@@ -180,14 +180,14 @@ R --vanilla < ${NAME}_\${SBATCH_ID}.R"
 }
 
 RSCRIPT_COMMAND () {
-echo "
+	echo "
 #-------------------- R SCRIPT COMMAND --------------------
 echo \"---------- R SCRIPT COMMAND == R --vanilla < ${NAME}.R < ${RSCRIPT}\"
 R --vanilla < ${NAME}.R"
 }
 
 SCRIPT_END_ARRAY () {
-echo '
+	echo '
 #-------------------- JOB INFO --------------------
 echo -n "---------- SCONTROL == " ;  scontrol show jobid -dd ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}
 echo "---------- PATH == ${PATH}"
@@ -196,7 +196,7 @@ echo -n "---------- END TIME == " ; date +"%Y_%m_%d %H:%M:%S"
 }
 
 SCRIPT_END () {
-echo '
+	echo '
 #-------------------- JOB INFO --------------------
 echo -n "---------- SCONTROL == " ;  scontrol show jobid -dd ${SLURM_JOB_ID}
 echo "---------- PATH == ${PATH}"
@@ -243,9 +243,14 @@ fi
 #---------- WALLTIME 
 if [ ${WALLTIME} == 24 ]
 	then
+	WALLTIME=${WALLTIME}:00:00
 	CYAN "---------- DEFAULT WALLTIME == ${WALLTIME} ----------"
 else
-	if [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 336 ]
+	if [[ ${WALLTIME} =~ ^[0-9]+$ ]] && [ ${WALLTIME} -gt 0 -a ${WALLTIME} -le 336 ]
+		then
+		WALLTIME=${WALLTIME}:00:00
+		CYAN "---------- WALLTIME == ${WALLTIME} ----------"
+	elif [[ ${WALLTIME} == "UNLIMITED" ]]
 		then
 		CYAN "---------- WALLTIME == ${WALLTIME} ----------"
 	else
@@ -255,7 +260,7 @@ else
 	fi
 fi
 
-#---------- SCRIPT_ARGS 
+#---------- SCRIPT_ARGS
 if [ ${ARGS} ]
 	then
 	CYAN "---------- SCRIPT_ARGS == ${ARGS[@]} ----------"
@@ -344,7 +349,7 @@ if [[ ( -f "${NAME}.sh" && -x "${NAME}.sh" && -s "${NAME}.sh" ) ]]
 then
 	CYAN "---------- SBATCH == sbatch ${NAME}.sh ----------"
 	if [ ${DEBUG} == 1 ]
-		then 
+		then
 		MAGENTA "---------- DEBUG == file created, not submitted ----------"
 	else
 		GREEN "---------- Job ID == " ; sbatch ${NAME}.sh
