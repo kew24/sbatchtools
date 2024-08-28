@@ -3,7 +3,7 @@
 #---------- Set Default Values
 DEBUG=0
 CORES=1
-PARTITION=short
+PARTITION=quick
 WALLTIME=24
 
 #---------- Colors

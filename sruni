@@ -4,7 +4,7 @@
 DEBUG=0
 CORES=1
 NAME=bash
-PARTITION=short
+PARTITION=quick
 WALLTIME=24
 
 #---------- Colors
