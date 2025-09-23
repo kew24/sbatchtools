@@ -79,12 +79,12 @@ if [ ${CORES} == 1 ]
 	then	
 	CYAN "---------- DEFAULT CORES == ${CORES} ----------"
 else
-	if [ ${CORES} -gt 0 -a ${CORES} -le 128 ]
+	if [ ${CORES} -gt 0 -a ${CORES} -le 256 ]
 		then
 		CYAN "---------- CORES == ${CORES} ----------"
 	else
 		RED "---------- CORES == ${CORES} ----------"
-		RED "---------- [[ERROR]] CORES NOT GIVEN BETWEEN 1-128 ----------"
+		RED "---------- [[ERROR]] CORES NOT GIVEN BETWEEN 1-256 ----------"
 		exit 0
 	fi
 fi	
